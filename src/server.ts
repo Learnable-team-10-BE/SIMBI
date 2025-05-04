@@ -1,8 +1,10 @@
 import express, { Express } from 'express';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database';
-import authRoutes from './routes/auth.routes';
-import errorHandler from './middlewares/auth.middleware';
+import authRoutes from './routes/auth.route';
+import errorHandler from './middlewares/error.middleware';
+import studyPlanRoutes from './routes/studyPlans.route';
+import aiPlanRoute from './routes/aiPlan.route';
 import app from './app';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
@@ -12,6 +14,10 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
+// Middleware
+app.use(express.json());
+
+// Database connection
 // Middleware
 app.use(express.json());
 
@@ -31,19 +37,23 @@ app.get('/health', (req, res) => {
 // Self-pinging function
 const startPinging = () => {
   // Use the Render-provided URL or fallback to localhost for development
-  const appUrl = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-
+  const appUrl = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL|| `http://localhost:${PORT}`;
+  
   // Schedule ping every 10 seconds
   cron.schedule('*/10 * * * *', async () => {
     try {
       const response = await axios.get(`${appUrl}/health`);
       console.log(`Ping successful at ${new Date().toISOString()}: ${response.status}`);
-    } catch (error: any) {
+    } catch (error:any) {
       console.error(`Ping failed at ${new Date().toISOString()}: ${error.message}`);
     }
   });
 };
 app.use('/api/auth', authRoutes);
+
+// The study Plan routes
+app.use('/api', studyPlanRoutes);
+app.use('/api/ai', aiPlanRoute);
 
 
 // Swagger documentation
@@ -65,5 +75,3 @@ process.on('SIGTERM', () => {
     console.log('Process terminated');
   });
 });
-
-

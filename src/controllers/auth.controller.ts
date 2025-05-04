@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import User from '../models/user.models';
+import User from '../models/user';
 import { generateWallet, encryptPrivateKey } from '../services/walletService';
 import { sendVerificationEmail } from '../services/emailService';
 import { RegisterRequestBody, VerifyRequestBody, LoginRequestBody } from '../interfaces/auth.interface';

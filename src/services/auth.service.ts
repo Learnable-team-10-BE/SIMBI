@@ -1,4 +1,4 @@
-import User from '../models/user.models'; 
+import User from '../models/user'; 
 import { IUser } from '../interfaces/auth.interface'; 
 import { updateStreak } from '../utils/streak.utils';
 
