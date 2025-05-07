@@ -19,7 +19,7 @@ const router = Router();
  *               - name
  *               - email
  *               - password
- *             properties:
+ *           properties:
  *               name:
  *                 type: string
  *               email:
@@ -29,7 +29,7 @@ const router = Router();
  *                 type: string
  *                 format: password
  *     responses:
- *       200:
+ *       200: 
  *         description: Registration successful
  *       400:
  *         description: Invalid input or email already registered
@@ -69,7 +69,7 @@ router.post('/verify', verify);
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Login user
+ *     summary: Login user and update streak
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -80,25 +80,22 @@ router.post('/verify', verify);
  *             required:
  *               - email
  *               - password
- *             properties:
+ *           properties:
  *               email:
  *                 type: string
  *                 format: email
  *               password:
  *                 type: string
  *                 format: password
- *                currentStreak: 
- *                 type: Number 
+ *               currentStreak: 
+ *                 type: number 
  *                 default: 0 
  *               longestStreak: 
- *                 type: Number
- *                 default: 0 
- *               streak: 
- *                 type: Number
- *                 default: 0 
+ *                 type: number
+ *                 default: 0  
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Login successfully. Streak potentially updated.
  *         content:
  *           application/json:
  *             schema:

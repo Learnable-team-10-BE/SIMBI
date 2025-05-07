@@ -1,5 +1,6 @@
 import StudySession, { IStudySession } from "../models/studyplan";
 import { Types } from "mongoose";
+import { updateUserLastStudyDate } from "./auth.service";
 
 export default class StudySessionService {
   static async createSession(
@@ -13,6 +14,9 @@ export default class StudySessionService {
     }
   ): Promise<IStudySession> {
     const session = new StudySession({ ...data, userId });
+    if (session && session.userId) {
+      await updateUserLastStudyDate(session.userId.toString());
+    }
     return await session.save();
   }
 

@@ -27,7 +27,6 @@ const userSchema: Schema<IUser> = new Schema({
   privateKey: { type: String },
   currentStreak: { type: Number, default: 0 },
   longestStreak: { type: Number, default: 0 },
-  streak: { type: Number, default: 0 },
   lastStudyDate: { type: Date },
   lastQuizDate: { type: Date },
   levelOfEducation: { 

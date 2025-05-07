@@ -11,7 +11,6 @@ export interface IUser extends Document {
   levelOfEducation: 'secondary' | 'university';
   currentStreak: number;
   longestStreak: number;
-  streak: number;
   lastStudyDate?: Date;
   lastQuizDate?: Date;
   achievements: string[];
