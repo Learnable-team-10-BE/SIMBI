@@ -108,8 +108,8 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
 
     const updateUser = await updateUserLastStudyDate(user.id.toString());
     res.json({ token, user: updateUser || user,
-       currentStreak: user.currentStreak,
-       longestStreak: user.longestStreak
+      currentStreak: user.currentStreak,
+      longestStreak: user.longestStreak
     });
   } catch (error) {
     if (error instanceof Error) {
