@@ -3,8 +3,8 @@ export interface IQuizInput {
   difficulty: 'easy' | 'medium' | 'hard';
   academicLevel: 'secondary school' | 'university' | 'personal development';
   numberOfQuestions: number;
-  duration?: number; // in minutes
-  file?: Express.Multer.File; // Optional file upload
+  duration?: number;
+  file?: Express.Multer.File; 
 }
 
 export interface IMCQQuestion {

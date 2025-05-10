@@ -1,48 +1,46 @@
 import { Router } from "express";
-import { getQuizHistoryHandler } from "../controllers/quizHistory.controller";
-
+import {
+  getQuizHistoryByIdHandler,
+  getTotalQuizHistoryHandler,
+} from "../controllers/quizHistory.controller";
 const router = Router();
 
+router.get("/history", getTotalQuizHistoryHandler);
 /**
  * @swagger
- * tags:
- *   name: Quiz History
- *   description: Quiz history management API
- */
-
-/**
- * @swagger
- * /api/quiz-history/{userId}/history:
+ * /api/quiz/history:
  *   get:
- *     summary: Get quiz history for a user
+ *     summary: Get total quiz history
  *     tags: [Quiz History]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         schema:
- *           type: string
- *         required: true
- *         description: The user id
  *     responses:
  *       200:
  *         description: Quiz history retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Quiz'
  *       400:
- *         description: Invalid input
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: User not found
+ *         description: User ID is required
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
-router.get("/:userId/history", getQuizHistoryHandler);
+router.get("/history/:quizId", getQuizHistoryByIdHandler);
+/**
+ * @swagger
+ * /api/quiz/history/{quizId}:
+ *   get:
+ *     summary: Get quiz history by ID
+ *     tags: [Quiz History]
+ *     parameters:
+ *       - name: quizId
+ *         in: path
+ *         required: true
+ *         description: The ID of the quiz
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Quiz history retrieved successfully
+ *       400:
+ *         description: Invalid quiz ID or user ID is required
+ *       500:
+ *         description: Internal server error
+ */
 
 export default router;
