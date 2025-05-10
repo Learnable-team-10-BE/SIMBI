@@ -37,34 +37,6 @@ const router = (0, express_1.Router)();
 router.post('/register', auth_controller_1.register);
 /**
  * @swagger
- * /api/auth/verify:
- *   post:
- *     summary: Verify user email
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - verificationToken
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               verificationToken:
- *                 type: string
- *     responses:
- *       200:
- *         description: Email verified successfully
- *       400:
- *         description: Invalid token or email not found
- */
-router.post('/verify', auth_controller_1.verify);
-/**
- * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Login user
@@ -96,7 +68,8 @@ router.post('/verify', auth_controller_1.verify);
  *                 token:
  *                   type: string
  *       400:
- *         description: Invalid credentials or email not verified
+ *         description: Invalid credentials
  */
 router.post('/login', auth_controller_1.login);
 exports.default = router;
+//# sourceMappingURL=auth.route.js.map

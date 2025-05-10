@@ -3,32 +3,68 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
 import { generateWallet, encryptPrivateKey } from '../services/walletService';
-import { sendVerificationEmail } from '../services/emailService';
-import { RegisterRequestBody, VerifyRequestBody, LoginRequestBody } from '../interfaces/auth.interface';
+import { RegisterRequestBody, LoginRequestBody } from '../interfaces/auth.interface';
 
 export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: Response): Promise<void> => {
   try {
     const { name, email, password, levelOfEducation } = req.body;
 
+    // Validate required fields
     if (!name || !email || !password || !levelOfEducation) {
-      res.status(400).json({ error: 'Missing fields' });
+      res.status(400).json({ 
+        success: false,
+        error: 'Missing required fields',
+        details: {
+          name: !name ? 'Name is required' : undefined,
+          email: !email ? 'Email is required' : undefined,
+          password: !password ? 'Password is required' : undefined,
+          levelOfEducation: !levelOfEducation ? 'Level of education is required' : undefined
+        }
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ 
+        success: false,
+        error: 'Invalid email format' 
+      });
+      return;
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      res.status(400).json({ 
+        success: false,
+        error: 'Password must be at least 6 characters long' 
+      });
       return;
     }
 
     const validEducationLevels = ['secondary', 'university'];
     if (!validEducationLevels.includes(levelOfEducation)) {
-      res.status(400).json({ error: 'Invalid level of education' });
+      res.status(400).json({ 
+        success: false,
+        error: 'Invalid level of education',
+        details: {
+          levelOfEducation: `Must be one of: ${validEducationLevels.join(', ')}`
+        }
+      });
       return;
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res.status(400).json({ error: 'Email already registered' });
+      res.status(400).json({ 
+        success: false,
+        error: 'Email already registered' 
+      });
       return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
     const { address: walletAddress, privateKey } = generateWallet();
     const encryptedPrivateKey = encryptPrivateKey(privateKey);
 
@@ -36,49 +72,45 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
       name,
       email,
       password: hashedPassword,
-      verificationToken,
       levelOfEducation,
       walletAddress,
       privateKey: JSON.stringify(encryptedPrivateKey),
     });
 
     await user.save();
-    await sendVerificationEmail(email, verificationToken);
 
-    res.json({ message: 'Registration successful. Please check your email to verify.' });
+    const token = jwt.sign(
+      { userId: user._id }, 
+      process.env.JWT_SECRET || 'your_secret_key', 
+      { expiresIn: '1h' }
+    );
+
+    // Remove sensitive data before sending response
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      levelOfEducation: user.levelOfEducation,
+      walletAddress: user.walletAddress,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
+
+    res.status(201).json({ 
+      success: true,
+      message: 'Registration successful',
+      data: {
+        user: userResponse,
+        token
+      }
+    });
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Registration error: ${error.message}`);
-    }
-    throw new Error('Registration error: An unknown error occurred');
-  }
-};
-
-export const verify = async (req: Request<{}, {}, VerifyRequestBody>, res: Response): Promise<void> => {
-  try {
-    const { email, verificationToken } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      res.status(400).json({ error: 'User not found' });
-      return;
-    }
-
-    if (user.verificationToken !== verificationToken) {
-      res.status(400).json({ error: 'Invalid token' });
-      return;
-    }
-
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    await user.save();
-
-    res.json({ message: 'Email verified successfully' });
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Verification error: ${error.message}`);
-    }
-    throw new Error('Verification error: An unknown error occurred');
+    console.error('Registration error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'An unknown error occurred'
+    });
   }
 };
 
@@ -86,29 +118,63 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      res.status(400).json({ error: 'User not found' });
+    if (!email || !password) {
+      res.status(400).json({ 
+        success: false,
+        error: 'Email and password are required' 
+      });
       return;
     }
 
-    if (!user.isVerified) {
-      res.status(400).json({ error: 'Email not verified' });
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(400).json({ 
+        success: false,
+        error: 'Invalid email or password' 
+      });
       return;
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      res.status(400).json({ error: 'Invalid password' });
+      res.status(400).json({ 
+        success: false,
+        error: 'Invalid email or password' 
+      });
       return;
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_secret_key', { expiresIn: '1h' });
-    res.json({ token });
+    const token = jwt.sign(
+      { userId: user._id }, 
+      process.env.JWT_SECRET || 'your_secret_key', 
+      { expiresIn: '1h' }
+    );
+
+    // Remove sensitive data before sending response
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      levelOfEducation: user.levelOfEducation,
+      walletAddress: user.walletAddress,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
+
+    res.json({ 
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: userResponse,
+        token
+      }
+    });
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Login error: ${error.message}`);
-    }
-    throw new Error('Login error: An unknown error occurred');
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'An unknown error occurred'
+    });
   }
 };

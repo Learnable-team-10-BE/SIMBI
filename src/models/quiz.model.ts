@@ -8,6 +8,7 @@ export interface IQuizQuestion {
 }
 
 export interface IQuiz extends Document {
+  _id: mongoose.Types.ObjectId;
   userId: string;
   topic: string;
   academicLevel: 'secondary' | 'university' | 'personal development';

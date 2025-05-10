@@ -20,7 +20,7 @@ const authMiddleware = (
   const token = authHeader.split(' ')[1];
 
   try {
-    const secret = process.env.JWT_SECRET || 'SIMBI_secret';
+    const secret = process.env.JWT_SECRET || 'your_secret_key';
     const decoded = jwt.verify(token, secret) as { userId: string; email?: string };
     
     req.user = { userId: decoded.userId, email: decoded.email };
