@@ -1,23 +1,6 @@
-// import mongoose, { Schema, Document } from 'mongoose';
-// import { IUser } from '../interfaces/auth.interface';
+import mongoose from 'mongoose';
 
-// const userSchema: Schema<IUser> = new Schema({
-//   name: { type: String, required: true },
-//   email: { type: String, required: true, unique: true },
-//   password: { type: String, required: true },
-//   verificationToken: { type: String },
-//   isVerified: { type: Boolean, default: false },
-//   walletAddress: { type: String },
-//   privateKey: { type: String },
-// });
-
-// export default mongoose.model<IUser>('User', userSchema);
-
-
-import mongoose, { Schema, Document } from 'mongoose';
-import { IUser } from '../interfaces/auth.interface';
-
-const userSchema: Schema<IUser> = new Schema({
+const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -34,8 +17,10 @@ const userSchema: Schema<IUser> = new Schema({
     enum: ['secondary', 'university'], 
     required: true 
   },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
+const User = mongoose.model('User', userSchema);
 
-
-export default mongoose.model<IUser>('User', userSchema);
+export default User;

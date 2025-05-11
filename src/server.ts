@@ -5,14 +5,18 @@ import authRoutes from './routes/auth.route';
 import errorHandler from './middlewares/error.middleware';
 import studyPlanRoutes from './routes/studyPlans.route';
 import aiPlanRoute from './routes/aiPlan.route';
-import app from './app';
+import app from "./app";
+import axios from 'axios';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 const cron = require('node-cron');
+import quizRoutes from './routes/quiz.route';
 
-dotenv.config();
+
 
 const PORT = process.env.PORT || 3000;
+
+
 
 // Middleware
 app.use(express.json());
@@ -28,6 +32,7 @@ connectDB();
 app.get('/', (req, res) => {
   res.send('Express app running on Render!');
 });
+
 
 // Health check endpoint for pinging
 app.get('/health', (req, res) => {
@@ -54,6 +59,9 @@ app.use('/api/auth', authRoutes);
 // The study Plan routes
 app.use('/api', studyPlanRoutes);
 app.use('/api/ai', aiPlanRoute);
+
+// The quiz Route
+app.use('/api/quiz', quizRoutes);
 
 
 // Swagger documentation

@@ -1,11 +1,10 @@
 import { Document } from 'mongoose';
 
-export interface IUser extends Document {
+export interface IUser {
   name: string;
   email: string;
   password: string;
-  verificationToken?: string;
-  isVerified: boolean;
+  levelOfEducation: 'secondary' | 'university';
   walletAddress: string;
   privateKey: string;
   levelOfEducation: 'secondary' | 'university';
@@ -14,6 +13,8 @@ export interface IUser extends Document {
   lastStudyDate?: Date;
   lastQuizDate?: Date;
   achievements: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface EncryptedData {
@@ -26,11 +27,6 @@ export interface RegisterRequestBody {
   email: string;
   password: string;
   levelOfEducation: 'secondary' | 'university';
-}
-
-export interface VerifyRequestBody {
-  email: string;
-  verificationToken: string;
 }
 
 export interface LoginRequestBody {
