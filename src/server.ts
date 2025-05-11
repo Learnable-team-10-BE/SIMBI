@@ -22,6 +22,10 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Database connection
+// Middleware
+app.use(express.json());
+
+// Database connection
 connectDB();
 
 // Routes
