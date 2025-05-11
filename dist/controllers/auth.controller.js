@@ -11,18 +11,54 @@ const walletService_1 = require("../services/walletService");
 const register = async (req, res) => {
     try {
         const { name, email, password, levelOfEducation } = req.body;
+        // Validate required fields
         if (!name || !email || !password || !levelOfEducation) {
-            res.status(400).json({ error: 'Missing fields' });
+            res.status(400).json({
+                success: false,
+                error: 'Missing required fields',
+                details: {
+                    name: !name ? 'Name is required' : undefined,
+                    email: !email ? 'Email is required' : undefined,
+                    password: !password ? 'Password is required' : undefined,
+                    levelOfEducation: !levelOfEducation ? 'Level of education is required' : undefined
+                }
+            });
+            return;
+        }
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            res.status(400).json({
+                success: false,
+                error: 'Invalid email format'
+            });
+            return;
+        }
+        // Validate password strength
+        if (password.length < 6) {
+            res.status(400).json({
+                success: false,
+                error: 'Password must be at least 6 characters long'
+            });
             return;
         }
         const validEducationLevels = ['secondary', 'university'];
         if (!validEducationLevels.includes(levelOfEducation)) {
-            res.status(400).json({ error: 'Invalid level of education' });
+            res.status(400).json({
+                success: false,
+                error: 'Invalid level of education',
+                details: {
+                    levelOfEducation: `Must be one of: ${validEducationLevels.join(', ')}`
+                }
+            });
             return;
         }
         const existingUser = await user_1.default.findOne({ email });
         if (existingUser) {
-            res.status(400).json({ error: 'Email already registered' });
+            res.status(400).json({
+                success: false,
+                error: 'Email already registered'
+            });
             return;
         }
         const hashedPassword = await bcrypt_1.default.hash(password, 10);
@@ -32,44 +68,94 @@ const register = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            isVerified: true,
             levelOfEducation,
             walletAddress,
             privateKey: JSON.stringify(encryptedPrivateKey),
         });
         await user.save();
         const token = jsonwebtoken_1.default.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_secret_key', { expiresIn: '1h' });
-        res.json({ message: 'Registration successful', token });
+        // Remove sensitive data before sending response
+        const userResponse = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            levelOfEducation: user.levelOfEducation,
+            walletAddress: user.walletAddress,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+        res.status(201).json({
+            success: true,
+            message: 'Registration successful',
+            data: {
+                user: userResponse,
+                token
+            }
+        });
     }
     catch (error) {
-        if (error instanceof Error) {
-            throw new Error(`Registration error: ${error.message}`);
-        }
-        throw new Error('Registration error: An unknown error occurred');
+        console.error('Registration error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: error instanceof Error ? error.message : 'An unknown error occurred'
+        });
     }
 };
 exports.register = register;
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        if (!email || !password) {
+            res.status(400).json({
+                success: false,
+                error: 'Email and password are required'
+            });
+            return;
+        }
         const user = await user_1.default.findOne({ email });
         if (!user) {
-            res.status(400).json({ error: 'User not found' });
+            res.status(400).json({
+                success: false,
+                error: 'Invalid email or password'
+            });
             return;
         }
         const isPasswordValid = await bcrypt_1.default.compare(password, user.password);
         if (!isPasswordValid) {
-            res.status(400).json({ error: 'Invalid password' });
+            res.status(400).json({
+                success: false,
+                error: 'Invalid email or password'
+            });
             return;
         }
         const token = jsonwebtoken_1.default.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_secret_key', { expiresIn: '1h' });
-        res.json({ token });
+        // Remove sensitive data before sending response
+        const userResponse = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            levelOfEducation: user.levelOfEducation,
+            walletAddress: user.walletAddress,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+        res.json({
+            success: true,
+            message: 'Login successful',
+            data: {
+                user: userResponse,
+                token
+            }
+        });
     }
     catch (error) {
-        if (error instanceof Error) {
-            throw new Error(`Login error: ${error.message}`);
-        }
-        throw new Error('Login error: An unknown error occurred');
+        console.error('Login error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: error instanceof Error ? error.message : 'An unknown error occurred'
+        });
     }
 };
 exports.login = login;

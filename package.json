@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node src/server.ts",
-    "build": "rm -rf dist && mkdir dist && tsc",
+    "build": "rimraf dist && mkdir dist && tsc",
     "start": "node dist/server.js",
     "postinstall": "npm run build"
   },

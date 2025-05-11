@@ -12,7 +12,7 @@ const authMiddleware = (req, res, next) => {
     }
     const token = authHeader.split(' ')[1];
     try {
-        const secret = process.env.JWT_SECRET || 'SIMBI_secret';
+        const secret = process.env.JWT_SECRET || 'your_secret_key';
         const decoded = jsonwebtoken_1.default.verify(token, secret);
         req.user = { userId: decoded.userId, email: decoded.email };
         next();
