@@ -5,14 +5,13 @@ export interface IUser {
   email: string;
   password: string;
   levelOfEducation: 'secondary' | 'university';
-  walletAddress: string;
-  privateKey: string;
-  levelOfEducation: 'secondary' | 'university';
+  privateKey: string | null | undefined;
   currentStreak: number;
   longestStreak: number;
   lastStudyDate?: Date;
   lastQuizDate?: Date;
-  achievements: string[];
+    walletAddress: string | null | undefined;
+  achievements?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }

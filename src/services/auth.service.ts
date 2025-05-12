@@ -28,7 +28,7 @@ export const updateUserLastStudyDate = async (userId: string): Promise<IUser | n
   user.longestStreak = newLongestStreak;
 
   const updateUser = await user.save();
-  return updateUser;
+  return updateUser.toObject() as IUser;
   } catch (error) {
     console.error (`Error updating streak for user ${userId}:`, error);
     throw new Error('Failed to update user streak');
