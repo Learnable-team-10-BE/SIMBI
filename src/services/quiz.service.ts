@@ -153,18 +153,18 @@ export async function submitAnswer(userId: string, quizId: string, questionIndex
 
   quiz.answers[questionIndex] = answer;
 
-  const answeredCount = quiz.answers.filter(ans => ans !== null).length;
+  const answeredCount = quiz.answers.filter((ans: string | null) => ans !== null).length;
   quiz.progress = answeredCount / quiz.numberOfQuestions;
 
   return await quiz.save();
 }
 
-export async function getQuizById(quizId: string): Promise<IQuiz | null> {
-  return await QuizModel.findById(quizId);
+export async function getQuizById(quizId: string, userId:string): Promise<IQuiz | null> {
+  return await QuizModel.findOne({ _id: quizId, userId });
 }
 
 export async function getQuizProgress(quizId: string, userId: string): Promise<number> {
-  const quiz = await QuizModel.findById(quizId);
+  const quiz = await QuizModel.findOne({ _id: quizId, userId });
   if (!quiz) throw new Error('Quiz not found');
   return quiz.progress;
 }

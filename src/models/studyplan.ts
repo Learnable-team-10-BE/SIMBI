@@ -6,7 +6,7 @@ export interface IStudySession extends Document {
   topic: string;
   date: Date;
   time: string;
-  duration: number; // in minutes
+  duration: number; 
   status: "upcoming" | "missed" | "completed";
   createdAt: Date;
   updatedAt: Date;
@@ -18,8 +18,8 @@ const StudySessionSchema = new Schema<IStudySession>(
     subject: { type: String, required: true },
     topic: { type: String, required: true },
     date: { type: Date, required: true },
-    time: { type: String, required: true }, // Could also be handled via Date if needed
-    duration: { type: Number, required: true }, // in minutes
+    time: { type: String, required: true }, 
+    duration: { type: Number, required: true }, 
     status: {
       type: String,
       enum: ["upcoming", "missed", "completed"],
@@ -27,7 +27,7 @@ const StudySessionSchema = new Schema<IStudySession>(
     },
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt
+    timestamps: true, 
   }
 );
 

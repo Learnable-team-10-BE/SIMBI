@@ -10,7 +10,7 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     body: req.body
   });
 
-  // Send more detailed error response
+
   res.status(500).json({ 
     error: 'Server error',
     message: err.message,

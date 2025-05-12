@@ -65,14 +65,14 @@
  */
 
 import { Router } from "express";
-import { createQuizHandler, submitAnswerHandler,
+import { generateQuizHandler, submitAnswerHandler,
     getQuizHandler, getProgressHandler
  } from "../controllers/quiz.controller";
 import authMiddleware from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.post("/generate", createQuizHandler);
+router.post("/generate", generateQuizHandler);
 router.post('/:quizId/answer', submitAnswerHandler);
 
 /**

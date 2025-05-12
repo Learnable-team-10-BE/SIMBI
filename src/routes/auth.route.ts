@@ -67,10 +67,10 @@ const router = Router();
  *               - name
  *               - email
  *               - password
+ *           properties:
  *               - levelOfEducation
  *               - walletAddress
  *               - privateKey
- *             properties:
  *               name:
  *                 type: string
  *                 description: The user's full name
@@ -93,7 +93,7 @@ const router = Router();
  *                 type: string
  *                 description: The user's blockchain private key
  *     responses:
- *       200:
+ *       200: 
  *         description: Registration successful
  *         content:
  *           application/json:
@@ -116,7 +116,7 @@ router.post('/register', register);
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Login user
+ *     summary: Login user and update streak
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -127,7 +127,7 @@ router.post('/register', register);
  *             required:
  *               - email
  *               - password
- *             properties:
+ *           properties:
  *               email:
  *                 type: string
  *                 format: email
@@ -135,10 +135,16 @@ router.post('/register', register);
  *               password:
  *                 type: string
  *                 format: password
+ *               currentStreak: 
+ *                 type: number 
+ *                 default: 0 
+ *               longestStreak: 
+ *                 type: number
+ *                 default: 0  
  *                 description: The user's password
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Login successfully. Streak potentially updated.
  *         content:
  *           application/json:
  *             schema:
