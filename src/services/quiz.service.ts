@@ -159,6 +159,25 @@ export async function submitAnswer(userId: string, quizId: string, questionIndex
   return await quiz.save();
 }
 
+
+export async function getQuizScore(quizId: string, userId: string): Promise<{ score: number; total: number }> {
+  // Fetch the quiz by ID and user ID
+  const quiz = await QuizModel.findOne({ _id: quizId, userId });
+  if (!quiz) throw new Error('Quiz not found');
+
+  // Calculate the score
+  let score = 0;
+  const total = quiz.questions.length;
+
+  quiz.questions.forEach((question, index) => {
+    if (quiz.answers[index] === question.correct_answer) {
+      score++;
+    }
+  });
+
+  return { score, total };
+}
+
 export async function getQuizById(quizId: string, userId:string): Promise<IQuiz | null> {
   return await QuizModel.findOne({ _id: quizId, userId });
 }
@@ -167,4 +186,17 @@ export async function getQuizProgress(quizId: string, userId: string): Promise<n
   const quiz = await QuizModel.findOne({ _id: quizId, userId });
   if (!quiz) throw new Error('Quiz not found');
   return quiz.progress;
+}
+
+export async function retakeQuiz(quizId: string, userId: string): Promise<IQuiz> {
+  // Fetch the quiz by ID and user ID
+  const quiz = await QuizModel.findOne({ _id: quizId, userId });
+  if (!quiz) throw new Error('Quiz not found');
+
+  // Reset answers and progress
+  quiz.answers = Array(quiz.numberOfQuestions).fill(null); // Reset all answers to null
+  quiz.progress = 0; // Reset progress to 0
+
+  // Save the updated quiz
+  return await quiz.save();
 }

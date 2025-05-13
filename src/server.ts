@@ -11,6 +11,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 const cron = require('node-cron');
 import quizRoutes from './routes/quiz.route';
+import quizHistoryRoutes from './routes/quizHistory.routes';
 
 
 
@@ -62,6 +63,7 @@ app.use('/api/ai', aiPlanRoute);
 
 // The quiz Route
 app.use('/api/quiz', quizRoutes);
+app.use('/api/quiz/h', quizHistoryRoutes);
 
 
 // Swagger documentation

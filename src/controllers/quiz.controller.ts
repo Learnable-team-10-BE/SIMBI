@@ -104,6 +104,39 @@ export const submitAnswerHandler = async (
   }
 };
 
+
+export const getQuizScoreHandler = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const quizId = mongoDbIdSchema.parse(req.params.quizId);
+
+    const { userId } = req.user || {};
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User not authenticated",
+      });
+    }
+
+    const score = await quizService.getQuizScore(quizId, userId);
+    const percentage = (score.score / score.total) * 100;
+    res.json({score, percentage});
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      // Handle validation errors
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.errors,
+      });
+    }
+    console.error("Controller error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 export const getQuizHandler = async (
   req: AuthenticatedRequest,
   res: Response
@@ -151,6 +184,43 @@ export const getProgressHandler = async (
 
     const progress = await quizService.getQuizProgress(quizId, userId);
     res.json({ progress });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      // Handle validation errors
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.errors,
+      });
+    }
+    console.error("Controller error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const retakeQuizHandler = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const quizId = mongoDbIdSchema.parse(req.params.quizId); // Validate quizId
+
+    const { userId } = req.user || {};
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User not authenticated",
+      });
+    }
+
+    // Call the service function to reset the quiz
+    const updatedQuiz = await quizService.retakeQuiz(quizId, userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Quiz has been reset successfully",
+      data: updatedQuiz,
+    });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       // Handle validation errors

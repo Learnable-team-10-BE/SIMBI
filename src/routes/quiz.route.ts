@@ -66,7 +66,7 @@
 
 import { Router } from "express";
 import { generateQuizHandler, submitAnswerHandler,
-    getQuizHandler, getProgressHandler
+    getQuizHandler, getProgressHandler, getQuizScoreHandler, retakeQuizHandler
  } from "../controllers/quiz.controller";
 import authMiddleware from "../middlewares/auth.middleware";
 
@@ -139,5 +139,7 @@ router.get('/:quizId', getQuizHandler);
  *         description: Server error
  */
 router.get('/:quizId/progress', getProgressHandler);
+router.get('/:quizId/score', getQuizScoreHandler);
+router.post('/:quizId/retake', retakeQuizHandler);
 
 export default router;
