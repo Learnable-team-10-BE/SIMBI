@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as quizHistoryService from "../services/quizHistory.service";
-import { mongoDbIdSchema } from "@/validators/quiz.validator";
+import { mongoDbIdSchema } from "../validators/quiz.validator";
 import { z } from "zod";
 
 export const getTotalQuizHistoryHandler = async (

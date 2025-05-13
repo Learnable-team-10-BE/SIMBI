@@ -65,115 +65,14 @@
  */
 
 import { Router } from "express";
-import { generateQuizHandler, submitAnswerHandler, getQuizHandler, getProgressHandler } from "../controllers/quiz.controller";
+import { generateQuizHandler, submitAnswerHandler,
+    getQuizHandler, getProgressHandler, getQuizScoreHandler, retakeQuizHandler
+ } from "../controllers/quiz.controller";
 import authMiddleware from "../middlewares/auth.middleware";
 
 const router = Router();
 
-// Apply auth middleware to all quiz routes
-router.use(authMiddleware);
-
-/**
- * @swagger
- * /api/quiz/generate:
- *   post:
- *     summary: Generate a new quiz
- *     tags: [Quiz]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               topic:
- *                 type: string
- *               difficulty:
- *                 type: string
- *                 enum: [easy, medium, hard]
- *               academicLevel:
- *                 type: string
- *                 enum: [secondary school, university, personal development]
- *               numberOfQuestions:
- *                 type: number
- *               duration:
- *                 type: number
- *               file:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Quiz generated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 quizId:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Quiz'
- *       400:
- *         description: Invalid input
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
 router.post("/generate", generateQuizHandler);
-
-/**
- * @swagger
- * /api/quiz/{quizId}/answer:
- *   post:
- *     summary: Submit an answer for a quiz question
- *     tags: [Quiz]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: quizId
- *         schema:
- *           type: string
- *         required: true
- *         description: The quiz id
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - questionIndex
- *               - answer
- *             properties:
- *               questionIndex:
- *                 type: number
- *               answer:
- *                 type: string
- *     responses:
- *       200:
- *         description: Answer submitted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 progress:
- *                   type: number
- *       400:
- *         description: Invalid input
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Quiz not found
- *       500:
- *         description: Server error
- */
 router.post('/:quizId/answer', submitAnswerHandler);
 
 /**
@@ -240,5 +139,7 @@ router.get('/:quizId', getQuizHandler);
  *         description: Server error
  */
 router.get('/:quizId/progress', getProgressHandler);
+router.get('/:quizId/score', getQuizScoreHandler);
+router.post('/:quizId/retake', retakeQuizHandler);
 
 export default router;
