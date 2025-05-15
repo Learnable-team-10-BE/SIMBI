@@ -3,7 +3,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
 import { generateWallet, encryptPrivateKey } from '../services/walletService';
-import { RegisterRequestBody, LoginRequestBody } from '../interfaces/auth.interface';
+import { updateUserLastStudyDate } from '../services/auth.service';
+import { RegisterRequestBody,LoginRequestBody } from '../interfaces/auth.interface';
 
 export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: Response): Promise<void> => {
   try {
@@ -143,31 +144,13 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
       });
       return;
     }
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_secret_key', { expiresIn: '1h' });
 
-    const token = jwt.sign(
-      { userId: user._id }, 
-      process.env.JWT_SECRET || 'your_secret_key', 
-      { expiresIn: '1h' }
-    );
+    const updateUser = await updateUserLastStudyDate(user.id.toString());
+    res.json({ token, user: updateUser || user,
+      currentStreak: user.currentStreak,
+      longestStreak: user.longestStreak
 
-    // Remove sensitive data before sending response
-    const userResponse = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      levelOfEducation: user.levelOfEducation,
-      walletAddress: user.walletAddress,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt
-    };
-
-    res.json({ 
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: userResponse,
-        token
-      }
     });
   } catch (error) {
     console.error('Login error:', error);

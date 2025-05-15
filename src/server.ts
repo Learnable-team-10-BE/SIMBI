@@ -14,6 +14,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 const cron = require('node-cron');
 import quizRoutes from './routes/quiz.route';
+import quizHistoryRoutes from './routes/quizHistory.routes';
 
 
 
@@ -24,6 +25,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Database connection
+// Middleware
+app.use(express.json());
 
 // Database connection
 connectDB();
@@ -67,6 +72,7 @@ app.use('/api/studyResources', studyResourceRoutes);  // study resources
 
 // The quiz Route
 app.use('/api/quiz', quizRoutes);
+app.use('/api/quiz/h', quizHistoryRoutes);
 
 
 // Swagger documentation
