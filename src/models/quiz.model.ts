@@ -11,7 +11,7 @@ export interface IQuiz extends Document {
   _id: mongoose.Types.ObjectId;
   userId: string;
   topic: string;
-  academicLevel: string;
+  academicLevel: 'secondary' | 'university' | 'personal development';
   difficulty: 'easy' | 'medium' | 'hard';
   numberOfQuestions: number;
   duration?: number;
@@ -25,7 +25,7 @@ export interface IQuiz extends Document {
 const QuizSchema: Schema<IQuiz> = new Schema({
   userId: { type: String, required: true },
   topic: { type: String, required: true },
-  academicLevel: { type: String, required: true },
+  academicLevel: { type: String, enum: ['secondary', 'university', 'personal development'], required: true },
   difficulty: { type: String, enum: ['easy', 'medium', 'hard'], required: true },
   numberOfQuestions: { type: Number, required: true },
   duration: { type: Number },

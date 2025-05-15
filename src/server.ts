@@ -5,12 +5,16 @@ import authRoutes from './routes/auth.route';
 import errorHandler from './middlewares/error.middleware';
 import studyPlanRoutes from './routes/studyPlans.route';
 import aiPlanRoute from './routes/aiPlan.route';
+import studySessionRoutes from './routes/studySession.route';
+import studyNoteRoutes from './routes/studyNote.route';
+import studyResourceRoutes from './routes/studyResource.route';
 import app from "./app";
 import axios from 'axios';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 const cron = require('node-cron');
 import quizRoutes from './routes/quiz.route';
+import quizHistoryRoutes from './routes/quizHistory.routes';
 
 
 
@@ -20,6 +24,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Database connection
 // Middleware
@@ -60,8 +65,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api', studyPlanRoutes);
 app.use('/api/ai', aiPlanRoute);
 
+// The study session routes
+app.use('/api/studySessions', studySessionRoutes);
+app.use('/api/studyNotes', studyNoteRoutes);  // study notes
+app.use('/api/studyResources', studyResourceRoutes);  // study resources
+
 // The quiz Route
 app.use('/api/quiz', quizRoutes);
+app.use('/api/quiz/h', quizHistoryRoutes);
 
 
 // Swagger documentation

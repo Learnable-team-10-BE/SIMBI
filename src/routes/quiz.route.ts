@@ -1,4 +1,3 @@
-
 /**
  * @swagger
  * components:
@@ -65,13 +64,12 @@
  */
 
 import { Router } from "express";
-import { generateQuizHandler, submitAnswerHandler, getQuizHandler, getProgressHandler } from "../controllers/quiz.controller";
+import { generateQuizHandler, submitAnswerHandler,
+    getQuizHandler, getProgressHandler, getQuizScoreHandler, retakeQuizHandler
+ } from "../controllers/quiz.controller";
 import authMiddleware from "../middlewares/auth.middleware";
 
 const router = Router();
-
-// Apply auth middleware to all quiz routes
-router.use(authMiddleware);
 
 /**
  * @swagger
@@ -84,39 +82,39 @@ router.use(authMiddleware);
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - topic
+ *               - academicLevel
+ *               - difficulty
+ *               - numberOfQuestions
  *             properties:
  *               topic:
  *                 type: string
- *               difficulty:
- *                 type: string
- *                 enum: [easy, medium, hard]
+ *                 description: The topic of the quiz
  *               academicLevel:
  *                 type: string
  *                 enum: [secondary school, university, personal development]
+ *                 description: The academic level of the quiz
+ *               difficulty:
+ *                 type: string
+ *                 enum: [easy, medium, hard]
+ *                 description: The difficulty level of the quiz
  *               numberOfQuestions:
  *                 type: number
+ *                 description: The number of questions in the quiz
  *               duration:
  *                 type: number
- *               file:
- *                 type: string
- *                 format: binary
+ *                 description: The duration of the quiz in minutes
  *     responses:
- *       200:
+ *       201:
  *         description: Quiz generated successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 quizId:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Quiz'
+ *               $ref: '#/components/schemas/Quiz'
  *       400:
  *         description: Invalid input
  *       401:
@@ -153,18 +151,13 @@ router.post("/generate", generateQuizHandler);
  *             properties:
  *               questionIndex:
  *                 type: number
+ *                 description: The index of the question being answered
  *               answer:
  *                 type: string
+ *                 description: The user's answer
  *     responses:
  *       200:
  *         description: Answer submitted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 progress:
- *                   type: number
  *       400:
  *         description: Invalid input
  *       401:
@@ -240,5 +233,74 @@ router.get('/:quizId', getQuizHandler);
  *         description: Server error
  */
 router.get('/:quizId/progress', getProgressHandler);
+
+/**
+ * @swagger
+ * /api/quiz/{quizId}/score:
+ *   get:
+ *     summary: Get quiz score
+ *     tags: [Quiz]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: quizId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The quiz id
+ *     responses:
+ *       200:
+ *         description: Score retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 score:
+ *                   type: number
+ *                 totalQuestions:
+ *                   type: number
+ *                 correctAnswers:
+ *                   type: number
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Quiz not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:quizId/score', getQuizScoreHandler);
+
+/**
+ * @swagger
+ * /api/quiz/{quizId}/retake:
+ *   post:
+ *     summary: Retake a quiz
+ *     tags: [Quiz]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: quizId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The quiz id
+ *     responses:
+ *       200:
+ *         description: Quiz retaken successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Quiz'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Quiz not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/:quizId/retake', retakeQuizHandler);
 
 export default router;
