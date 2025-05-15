@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/user';
 import { generateWallet, encryptPrivateKey } from '../services/walletService';
 import { updateUserLastStudyDate } from '../services/auth.service';
-import { RegisterRequestBody,LoginRequestBody } from '../interfaces/auth.interface';
+import { fundNewUser } from '../services/tokenService'; // ✅ Import funding function
+import { RegisterRequestBody, LoginRequestBody } from '../interfaces/auth.interface';
 
 export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: Response): Promise<void> => {
   try {
@@ -80,13 +81,19 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
 
     await user.save();
 
+    // ✅ Automatically fund new internal wallet
+    try {
+      await fundNewUser(walletAddress);
+    } catch (fundError) {
+      console.warn('Failed to fund new wallet:', fundError);
+    }
+
     const token = jwt.sign(
       { userId: user._id }, 
       process.env.JWT_SECRET || 'your_secret_key', 
       { expiresIn: '1h' }
     );
 
-    // Remove sensitive data before sending response
     const userResponse = {
       _id: user._id,
       name: user.name,
@@ -114,6 +121,7 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
     });
   }
 };
+// Login function
 
 export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Response): Promise<void> => {
   try {

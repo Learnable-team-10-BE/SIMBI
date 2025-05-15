@@ -5,15 +5,17 @@ export interface IUser {
   email: string;
   password: string;
   levelOfEducation: 'secondary' | 'university';
-  privateKey: string | null | undefined;
   currentStreak: number;
   longestStreak: number;
   lastStudyDate?: Date;
   lastQuizDate?: Date;
-    walletAddress: string | null | undefined;
   achievements?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  walletAddress: string;
+  PrivateKey: string;
+  externalWalletAddress: string;
+  nonce: number;
 }
 
 export interface EncryptedData {
