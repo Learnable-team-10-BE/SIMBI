@@ -6,10 +6,15 @@ export interface IStudySession extends Document {
   topic: string;
   date: Date;
   time: string;
-  duration: number; // in minutes
-  status: "upcoming" | "missed" | "completed";
+  duration: number; // in minutes (planned duration)
+  status: "upcoming" | "missed" | "completed" | "active" | "paused";
   createdAt: Date;
   updatedAt: Date;
+
+  actualStartTime: Date;
+  actualEndTime: Date;
+  totalElapsedTime: number; // in seconds
+  active: boolean;
 }
 
 const StudySessionSchema = new Schema<IStudySession>(
@@ -18,17 +23,23 @@ const StudySessionSchema = new Schema<IStudySession>(
     subject: { type: String, required: true },
     topic: { type: String, required: true },
     date: { type: Date, required: true },
-    time: { type: String, required: true }, // Could also be handled via Date if needed
+    time: { type: String, required: true },
     duration: { type: Number, required: true }, // in minutes
     status: {
       type: String,
-      enum: ["upcoming", "missed", "completed"],
+      enum: ["upcoming", "missed", "completed", "active", "paused"],
       default: "upcoming",
     },
+
+    actualStartTime: { type: Date },
+    actualEndTime: { type: Date },
+    totalElapsedTime: { type: Number, default: 0 }, // in seconds
+    active: { type: Boolean, default: false }, // true = currently active
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt
+    timestamps: true,
   }
 );
 
 export default model<IStudySession>("StudySession", StudySessionSchema);
+
