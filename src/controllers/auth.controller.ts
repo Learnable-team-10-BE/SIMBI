@@ -4,7 +4,9 @@ import jwt from 'jsonwebtoken';
 import User from '../models/user';
 import { generateWallet, encryptPrivateKey } from '../services/walletService';
 import { updateUserLastStudyDate } from '../services/auth.service';
-import { RegisterRequestBody,LoginRequestBody } from '../interfaces/auth.interface';
+import { fundNewUser, fundLoginReward } from '../services/tokenService';
+import { RegisterRequestBody, LoginRequestBody, WalletAuthRequest  } from '../interfaces/auth.interface';
+import { ethers } from 'ethers';
 
 export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: Response): Promise<void> => {
   try {
@@ -80,13 +82,19 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
 
     await user.save();
 
+    // ✅ Automatically fund new internal wallet
+    try {
+      await fundNewUser(walletAddress);
+    } catch (fundError) {
+      console.warn('Failed to fund new wallet:', fundError);
+    }
+
     const token = jwt.sign(
       { userId: user._id }, 
       process.env.JWT_SECRET || 'your_secret_key', 
       { expiresIn: '1h' }
     );
 
-    // Remove sensitive data before sending response
     const userResponse = {
       _id: user._id,
       name: user.name,
@@ -114,7 +122,6 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
     });
   }
 };
-
 export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -144,13 +151,22 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
       });
       return;
     }
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_secret_key', { expiresIn: '1h' });
 
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_secret_key', { expiresIn: '1h' });
     const updateUser = await updateUserLastStudyDate(user.id.toString());
-    res.json({ token, user: updateUser || user,
+
+    // ✅ Login reward funding added here
+    try {
+      await fundLoginReward(user.walletAddress);
+    } catch (fundError) {
+      console.warn('Failed to fund login reward:', fundError);
+    }
+
+    res.json({ 
+      token, 
+      user: updateUser || user,
       currentStreak: user.currentStreak,
       longestStreak: user.longestStreak
-
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -158,6 +174,151 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
       success: false,
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'An unknown error occurred'
+    });
+  }
+};
+export const generateNonce = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { externalWalletAddress } = req.query;
+    
+    if (!externalWalletAddress) {
+      res.status(400).json({ 
+        success: false,
+        error: 'Wallet address required for nonce generation'
+      });
+      return;
+    }
+
+    const user = await User.findOne({ externalWalletAddress });
+    const nonce = user?.nonce ?? Math.floor(Math.random() * 1000000);
+
+    if (!user) {
+      res.json({
+        success: true,
+        data: { nonce }
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        nonce: user.nonce,
+        existingUser: !!user.email // Show if account might exist
+      }
+    });
+
+  } catch (error) {
+    console.error('Nonce generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+
+export const connectWallet = async (
+  req: Request<{}, {}, WalletAuthRequest>,
+  res: Response
+): Promise<void> => {
+  try {
+    const { externalWalletAddress, signature, nonce } = req.body;
+
+    // Validation
+    if (!externalWalletAddress || !signature) {
+      res.status(400).json({
+        success: false,
+        error: 'Wallet address and signature are required'
+      });
+      return;
+    }
+
+    // Get or create nonce
+    const user = await User.findOne({ externalWalletAddress });
+    const currentNonce = user?.nonce ?? nonce ?? Math.floor(Math.random() * 1000000);
+    
+    const message = `Welcome to Simbi AI!\n\nNonce: ${currentNonce}`;
+    const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+
+    if (recoveredAddress.toLowerCase() !== externalWalletAddress.toLowerCase()) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid signature verification'
+      });
+      return;
+    }
+
+    // Check for existing connections
+    const existingUser = await User.findOne({
+      $or: [
+        { externalWalletAddress },
+        { walletAddress: externalWalletAddress }
+      ]
+    });
+
+    if (existingUser && existingUser.externalWalletAddress !== externalWalletAddress) {
+      res.status(409).json({
+        success: false,
+        error: 'Wallet already linked to another account'
+      });
+      return;
+    }
+
+    // Update or create user
+    let authUser = existingUser;
+    if (!authUser) {
+      authUser = new User({
+        externalWalletAddress,
+        nonce: currentNonce,
+        currentStreak: 0,
+        longestStreak: 0,
+        walletAddress: '', // Keep internal wallet empty
+        privateKey: '', // No internal wallet generated
+        achievements: []
+      });
+
+      await fundNewUser(externalWalletAddress);
+    }
+
+    // Update nonce and link wallet
+    authUser.nonce = Math.floor(Math.random() * 1000000);
+    authUser.externalWalletAddress = externalWalletAddress;
+    await authUser.save();
+
+    // Generate token
+    const token = jwt.sign(
+      { userId: authUser._id },
+      process.env.JWT_SECRET || 'your_secret_key',
+      { expiresIn: '1h' }
+    );
+
+    // Optional login reward
+    try {
+      await fundLoginReward(externalWalletAddress);
+    } catch (fundError) {
+      console.warn('Login reward funding failed:', fundError);
+    }
+
+    // Format response to match IUser
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          ...authUser.toObject(),
+          password: undefined // Remove sensitive fields
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Wallet connection error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 };
