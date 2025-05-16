@@ -1,18 +1,18 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { ethers } from 'ethers';
 import User from '../models/user';
 import { generateWallet, encryptPrivateKey } from '../services/walletService';
 import { updateUserLastStudyDate } from '../services/auth.service';
 import { fundNewUser, fundLoginReward } from '../services/tokenService';
-import { RegisterRequestBody, LoginRequestBody, WalletAuthRequest  } from '../interfaces/auth.interface';
-import { ethers } from 'ethers';
+import { RegisterRequestBody, LoginRequestBody, WalletAuthRequest } from '../interfaces/auth.interface';
 
 export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: Response): Promise<void> => {
   try {
     const { name, email, password, levelOfEducation } = req.body;
 
-    // Validate required fields
+    // Validation logic remains the same
     if (!name || !email || !password || !levelOfEducation) {
       res.status(400).json({ 
         success: false,
@@ -27,7 +27,6 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       res.status(400).json({ 
@@ -37,7 +36,6 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
       return;
     }
 
-    // Validate password strength
     if (password.length < 6) {
       res.status(400).json({ 
         success: false,
@@ -78,11 +76,12 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
       levelOfEducation,
       walletAddress,
       privateKey: JSON.stringify(encryptedPrivateKey),
+      externalWalletAddress: '',
+      nonce: Math.floor(Math.random() * 1000000),
     });
 
     await user.save();
 
-    // ✅ Automatically fund new internal wallet
     try {
       await fundNewUser(walletAddress);
     } catch (fundError) {
@@ -122,6 +121,7 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
     });
   }
 };
+
 export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -152,21 +152,43 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
       return;
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_secret_key', { expiresIn: '1h' });
-    const updateUser = await updateUserLastStudyDate(user.id.toString());
+    const token = jwt.sign(
+      { userId: user._id }, 
+      process.env.JWT_SECRET || 'your_secret_key', 
+      { expiresIn: '1h' }
+    );
 
-    // ✅ Login reward funding added here
+    // Update last study date
+    let updatedUser;
+    try {
+      updatedUser = await updateUserLastStudyDate(user.id.toString());
+    } catch (error) {
+      console.warn('Failed to update study date:', error);
+      updatedUser = user;
+    }
+
+    // Fund login reward
     try {
       await fundLoginReward(user.walletAddress);
     } catch (fundError) {
       console.warn('Failed to fund login reward:', fundError);
     }
 
-    res.json({ 
-      token, 
-      user: updateUser || user,
-      currentStreak: user.currentStreak,
-      longestStreak: user.longestStreak
+    const userResponse = {
+      ...((updatedUser as any)?.toObject() ?? (user as any).toObject()),
+      password: undefined,
+      privateKey: undefined,
+      externalWalletAddress: updatedUser?.externalWalletAddress || undefined
+    };
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: userResponse,
+        currentStreak: updatedUser?.currentStreak ?? user.currentStreak,
+        longestStreak: updatedUser?.longestStreak ?? user.longestStreak
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -177,6 +199,7 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
     });
   }
 };
+
 export const generateNonce = async (req: Request, res: Response): Promise<void> => {
   try {
     const { externalWalletAddress } = req.query;
@@ -204,10 +227,9 @@ export const generateNonce = async (req: Request, res: Response): Promise<void> 
       success: true,
       data: {
         nonce: user.nonce,
-        existingUser: !!user.email // Show if account might exist
+        existingUser: !!user.email
       }
     });
-
   } catch (error) {
     console.error('Nonce generation error:', error);
     res.status(500).json({
@@ -218,7 +240,6 @@ export const generateNonce = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-
 export const connectWallet = async (
   req: Request<{}, {}, WalletAuthRequest>,
   res: Response
@@ -226,7 +247,6 @@ export const connectWallet = async (
   try {
     const { externalWalletAddress, signature, nonce } = req.body;
 
-    // Validation
     if (!externalWalletAddress || !signature) {
       res.status(400).json({
         success: false,
@@ -235,7 +255,6 @@ export const connectWallet = async (
       return;
     }
 
-    // Get or create nonce
     const user = await User.findOne({ externalWalletAddress });
     const currentNonce = user?.nonce ?? nonce ?? Math.floor(Math.random() * 1000000);
     
@@ -250,7 +269,6 @@ export const connectWallet = async (
       return;
     }
 
-    // Check for existing connections
     const existingUser = await User.findOne({
       $or: [
         { externalWalletAddress },
@@ -266,7 +284,6 @@ export const connectWallet = async (
       return;
     }
 
-    // Update or create user
     let authUser = existingUser;
     if (!authUser) {
       authUser = new User({
@@ -274,45 +291,41 @@ export const connectWallet = async (
         nonce: currentNonce,
         currentStreak: 0,
         longestStreak: 0,
-        walletAddress: '', // Keep internal wallet empty
-        privateKey: '', // No internal wallet generated
+        walletAddress: '',
+        privateKey: '',
         achievements: []
       });
 
       await fundNewUser(externalWalletAddress);
     }
 
-    // Update nonce and link wallet
     authUser.nonce = Math.floor(Math.random() * 1000000);
     authUser.externalWalletAddress = externalWalletAddress;
     await authUser.save();
 
-    // Generate token
     const token = jwt.sign(
       { userId: authUser._id },
       process.env.JWT_SECRET || 'your_secret_key',
       { expiresIn: '1h' }
     );
 
-    // Optional login reward
     try {
       await fundLoginReward(externalWalletAddress);
     } catch (fundError) {
       console.warn('Login reward funding failed:', fundError);
     }
 
-    // Format response to match IUser
     res.json({
       success: true,
       data: {
         token,
         user: {
           ...authUser.toObject(),
-          password: undefined // Remove sensitive fields
+          password: undefined,
+          privateKey: undefined
         }
       }
     });
-
   } catch (error) {
     console.error('Wallet connection error:', error);
     res.status(500).json({
