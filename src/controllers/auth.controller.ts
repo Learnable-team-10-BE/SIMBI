@@ -2,11 +2,12 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ethers } from 'ethers';
+import { Document } from 'mongoose';
 import User from '../models/user';
 import { generateWallet, encryptPrivateKey } from '../services/walletService';
 import { updateUserLastStudyDate } from '../services/auth.service';
 import { fundNewUser, fundLoginReward } from '../services/tokenService';
-import { RegisterRequestBody, LoginRequestBody, WalletAuthRequest } from '../interfaces/auth.interface';
+import { RegisterRequestBody, LoginRequestBody, WalletAuthRequest, IUser } from '../interfaces/auth.interface';
 
 export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: Response): Promise<void> => {
   try {
@@ -121,7 +122,6 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
     });
   }
 };
-
 export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -159,37 +159,41 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
     );
 
     // Update last study date
-    let updatedUser;
+    let updatedUser = user as unknown as Document & Omit<IUser, 'lastQuizDate'> & { lastQuizDate?: Date | null };
     try {
       updatedUser = await updateUserLastStudyDate(user.id.toString());
     } catch (error) {
       console.warn('Failed to update study date:', error);
-      updatedUser = user;
     }
 
-    // Fund login reward
+    // Format response safely
+    const userResponse = {
+      ...(updatedUser.toObject
+        ? updatedUser.toObject() // Handle Mongoose documents
+        : updatedUser),          // Handle plain objects (fallback)
+      password: undefined,
+      privateKey: undefined,
+      externalWalletAddress: updatedUser.externalWalletAddress || undefined
+    };
+
+    // Send response first
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: userResponse,
+        currentStreak: updatedUser.currentStreak,
+        longestStreak: updatedUser.longestStreak
+      }
+    });
+
+    // Handle login reward after response
     try {
       await fundLoginReward(user.walletAddress);
     } catch (fundError) {
       console.warn('Failed to fund login reward:', fundError);
     }
 
-    const userResponse = {
-      ...((updatedUser as any)?.toObject() ?? (user as any).toObject()),
-      password: undefined,
-      privateKey: undefined,
-      externalWalletAddress: updatedUser?.externalWalletAddress || undefined
-    };
-
-    res.json({
-      success: true,
-      data: {
-        token,
-        user: userResponse,
-        currentStreak: updatedUser?.currentStreak ?? user.currentStreak,
-        longestStreak: updatedUser?.longestStreak ?? user.longestStreak
-      }
-    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ 
