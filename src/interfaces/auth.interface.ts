@@ -7,7 +7,7 @@ export interface IUser {
   levelOfEducation: 'secondary' | 'university';
   currentStreak: number;
   longestStreak: number;
-  lastStudyDate?: Date;
+   lastStudyDate?: Date | null
   lastQuizDate?: Date;
   achievements?: string[];
   createdAt?: Date;
