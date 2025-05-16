@@ -13,7 +13,7 @@ export interface IUser {
   createdAt?: Date;
   updatedAt?: Date;
   walletAddress: string;
-  PrivateKey: string;
+  privateKey: string;
   externalWalletAddress: string;
   nonce: number;
 }
@@ -33,6 +33,12 @@ export interface RegisterRequestBody {
 export interface LoginRequestBody {
   email: string;
   password: string;
+}
+
+export interface WalletAuthRequest {
+  externalWalletAddress: string;
+  signature: string;
+  nonce?: number;
 }
 
 export interface QuizQuestion {
