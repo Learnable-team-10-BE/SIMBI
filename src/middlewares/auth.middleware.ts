@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 export interface AuthenticatedRequest extends Request {
-  user?: { userId: string; email?: string }; 
+  user?: { userId: string; email?: string; walletAddress?: string };
 }
 
 const authMiddleware = (
@@ -21,9 +21,18 @@ const authMiddleware = (
 
   try {
     const secret = process.env.JWT_SECRET || 'your_secret_key';
-    const decoded = jwt.verify(token, secret) as { userId: string; email?: string };
-    
-    req.user = { userId: decoded.userId, email: decoded.email };
+    const decoded = jwt.verify(token, secret) as {
+      userId: string;
+      email?: string;
+      walletAddress?: string;
+    };
+
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      walletAddress: decoded.walletAddress,
+    };
+
     next();
   } catch (err) {
     res.status(401).json({ error: 'Unauthorized: Invalid token' });
@@ -31,3 +40,4 @@ const authMiddleware = (
 };
 
 export default authMiddleware;
+
