@@ -90,9 +90,9 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
     }
 
     const token = jwt.sign(
-      { userId: user._id }, 
+      { userId: user._id, walletAddress: user.walletAddress }, 
       process.env.JWT_SECRET || 'your_secret_key', 
-      { expiresIn: '1h' }
+      { expiresIn: '2h' }
     );
 
     const userResponse = {
