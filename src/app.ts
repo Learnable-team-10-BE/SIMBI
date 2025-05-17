@@ -1,6 +1,8 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import { connectDB } from './config/database';
+import userRoutes from './routes/user.routes';
+import authRoutes from './routes/auth.route';
 
 const app: Express = express();
 
@@ -16,5 +18,8 @@ app.use(cors({
 app.use(express.json());
 
 connectDB();
+
+app.use('/api/user', userRoutes);
+app.use('/api/auth', authRoutes)
 
 export default app;
