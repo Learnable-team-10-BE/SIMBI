@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login } from '../controllers/auth.controller';
+import { register, login, connectWallet, generateNonce } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -161,5 +161,10 @@ router.post('/login', login);
  *         description: Invalid input or email already registered
  */
 router.post('/register', register);
+
+// auth.routes.ts
+router.get('/auth/nonce', generateNonce);
+
+router.post('/auth/wallet', connectWallet);
 
 export default router;

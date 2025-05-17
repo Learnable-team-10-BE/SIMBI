@@ -6,8 +6,16 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   verificationToken: { type: String },
   isVerified: { type: Boolean, default: false },
-  walletAddress: { type: String },
-  privateKey: { type: String },
+    walletAddress: { type: String, default: '' },
+  privateKey: { type: String, default: '' },
+   externalWalletAddress: { 
+    type: String, 
+    default: '',
+    index: true 
+  },
+    nonce: { 
+    type: Number, 
+    default: () => Math.floor(Math.random() * 1000000) },
   currentStreak: { type: Number, default: 0 },
   longestStreak: { type: Number, default: 0 },
   lastStudyDate: { type: Date },
