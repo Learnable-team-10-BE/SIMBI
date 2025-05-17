@@ -52,14 +52,26 @@ export const completeSession = async (sessionId: string) => {
     throw new Error("Session not in progress or not found");
   }
 
+  const now = new Date();
+
+  // Update elapsed time if still active
   if (session.status === "active") {
-    const now = new Date();
     const elapsed = (now.getTime() - session.actualStartTime.getTime()) / 1000;
     session.totalElapsedTime += elapsed;
   }
 
   session.status = "completed";
-  session.actualEndTime = new Date();
+  session.actualEndTime = now;
+
   await session.save();
-  return session;
+
+  // Calculate expected duration in seconds
+  const expectedDuration = session.duration * 60;
+
+  const endedEarly = session.totalElapsedTime < expectedDuration;
+
+  return {
+    ...session.toObject(),
+    endedEarly,
+  };
 };
