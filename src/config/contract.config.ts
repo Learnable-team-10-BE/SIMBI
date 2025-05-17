@@ -1,4 +1,4 @@
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 import dotenv from 'dotenv';
 import abiJson from './abi/StudyAchievementsABI.json';
 dotenv.config();

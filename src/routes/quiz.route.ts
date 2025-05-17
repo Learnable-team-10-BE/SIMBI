@@ -96,7 +96,7 @@ const router = Router();
  *                 description: The topic of the quiz
  *               academicLevel:
  *                 type: string
- *                 enum: [secondary school, university, personal development]
+ *                 enum: [secondary, university, personal development]
  *                 description: The academic level of the quiz
  *               difficulty:
  *                 type: string
