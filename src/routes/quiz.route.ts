@@ -122,7 +122,7 @@ const router = Router();
  *       500:
  *         description: Server error
  */
-router.post("/generate", generateQuizHandler);
+router.post("/generate", authMiddleware, generateQuizHandler);
 
 /**
  * @swagger
@@ -167,7 +167,7 @@ router.post("/generate", generateQuizHandler);
  *       500:
  *         description: Server error
  */
-router.post('/:quizId/answer', submitAnswerHandler);
+router.post('/:quizId/answer', authMiddleware, submitAnswerHandler);
 
 /**
  * @swagger
@@ -198,7 +198,7 @@ router.post('/:quizId/answer', submitAnswerHandler);
  *       500:
  *         description: Server error
  */
-router.get('/:quizId', getQuizHandler);
+router.get('/:quizId', authMiddleware, getQuizHandler);
 
 /**
  * @swagger
@@ -232,7 +232,7 @@ router.get('/:quizId', getQuizHandler);
  *       500:
  *         description: Server error
  */
-router.get('/:quizId/progress', getProgressHandler);
+router.get('/:quizId/progress', authMiddleware, getProgressHandler);
 
 /**
  * @swagger
@@ -270,7 +270,7 @@ router.get('/:quizId/progress', getProgressHandler);
  *       500:
  *         description: Server error
  */
-router.get('/:quizId/score', getQuizScoreHandler);
+router.get('/:quizId/score', authMiddleware, getQuizScoreHandler);
 
 /**
  * @swagger
@@ -301,6 +301,6 @@ router.get('/:quizId/score', getQuizScoreHandler);
  *       500:
  *         description: Server error
  */
-router.post('/:quizId/retake', retakeQuizHandler);
+router.post('/:quizId/retake', authMiddleware, retakeQuizHandler);
 
 export default router;
