@@ -1,6 +1,7 @@
 import { QuizModel, IQuiz } from "../models/quiz.model";
 import { IQuizHistory } from "../interfaces/quizHIstory.types";
 import mongoose, { Model } from "mongoose";
+import { updateUserLastStudyDate } from "./auth.service";
 
 export async function getTotalQuizHistory(userId: string): Promise<IQuizHistory[]> {
   if (!userId) {
@@ -18,7 +19,9 @@ export async function getTotalQuizHistory(userId: string): Promise<IQuizHistory[
       }
     });
     const score = (correctAnswers / quiz.numberOfQuestions) * 100;
-
+    if (correctAnswers) {
+     updateUserLastStudyDate(quiz.userId);
+    }
     return {
       quizId: String(quiz._id),
       subject: quiz.topic,
