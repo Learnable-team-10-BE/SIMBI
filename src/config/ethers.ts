@@ -15,24 +15,4 @@ export const tokenABI = [
   "function fundLoginReward(address user)",
   "function balanceOf(address account) view returns (uint256)",
   "function decimals() view returns (uint8)",
-  // Add balanceOf function from ERC20 standard
-  {
-    "constant": true,
-    "inputs": [{"name": "account", "type": "address"}],
-    "name": "balanceOf",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "decimals",
-    "outputs": [{"name": "", "type": "uint8"}],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+]
