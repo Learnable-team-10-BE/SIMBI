@@ -3,7 +3,7 @@ import { IUser } from '../interfaces/auth.interface';
 import { updateStreak } from '../utils/streak.utils';
 
 
-export const updateUserLastStudyDate = async (userId: string): Promise<IUser | null> => {
+export const updateUserLastStudyDate = async (userId: string): Promise< Partial<IUser> | null> => {
   try {
   const user = await User.findById(userId);
   if (!user) {
@@ -28,7 +28,7 @@ export const updateUserLastStudyDate = async (userId: string): Promise<IUser | n
   user.longestStreak = newLongestStreak;
 
   const updateUser = await user.save();
-  return updateUser;
+  return updateUser as Partial<IUser>;
   } catch (error) {
     console.error (`Error updating streak for user ${userId}:`, error);
     throw new Error('Failed to update user streak');

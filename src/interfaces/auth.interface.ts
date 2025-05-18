@@ -7,7 +7,6 @@ export interface IUser {
   levelOfEducation: 'secondary' | 'university';
   walletAddress: string;
   privateKey: string;
-  levelOfEducation: 'secondary' | 'university';
   currentStreak: number;
   longestStreak: number;
   lastStudyDate?: Date;

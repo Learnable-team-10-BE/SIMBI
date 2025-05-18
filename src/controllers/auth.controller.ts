@@ -3,9 +3,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
 import { generateWallet, encryptPrivateKey } from '../services/walletService';
-import { sendVerificationEmail } from '../services/emailService';
 import { updateUserLastStudyDate } from '../services/auth.service';
-import { RegisterRequestBody, VerifyRequestBody, LoginRequestBody, IUser } from '../interfaces/auth.interface';
+import { RegisterRequestBody, LoginRequestBody } from '../interfaces/auth.interface';
 
 export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: Response): Promise<void> => {
   try {
