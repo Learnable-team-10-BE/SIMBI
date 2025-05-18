@@ -46,7 +46,7 @@ This is the backend service for a SIMBI application, built with TypeScript, Expr
 * multer: A library for handling multipart/form-data requests (file uploads).
 * node-cron: A library for scheduling tasks using cron-like syntax.
 * nodemailer: A library for sending emails from Node.js.
-* openai: A library for working with OpenAI's API.
+* Geminiai: A library for working with GeminiAI's API.
 * pdf-parse: A library for parsing PDF files.
 * zod: A library for validating and parsing data using a schema-based approach.
 
