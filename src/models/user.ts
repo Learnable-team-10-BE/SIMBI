@@ -20,13 +20,18 @@ const userSchema = new mongoose.Schema({
   longestStreak: { type: Number, default: 0 },
   lastStudyDate: { type: Date },
   lastQuizDate: { type: Date },
+  achievements: { type: [String], default: [] },
   levelOfEducation: { 
     type: String, 
     enum: ['secondary', 'university'], 
     required: true 
   },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  });
+  userSchema.pre('save', function (next) {
+    this.updatedAt = new Date();
+    next();
 });
 
 const User = mongoose.model('User', userSchema);
