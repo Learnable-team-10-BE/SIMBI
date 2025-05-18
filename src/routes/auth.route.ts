@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login } from '../controllers/auth.controller';
+import { register, login, connectWallet, generateNonce } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -50,6 +50,56 @@ const router = Router();
  *           format: date-time
  *           description: The date the user was last updated
  */
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login user and update streak
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *           properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The user's email address
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               currentStreak: 
+ *                 type: number 
+ *                 default: 0 
+ *               longestStreak: 
+ *                 type: number
+ *                 default: 0  
+ *                 description: The user's password
+ *     responses:
+ *       200:
+ *         description: Login successfully. Streak potentially updated.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 token:
+ *                   type: string
+ *                   description: JWT authentication token
+ *       400:
+ *         description: Invalid credentials
+ */
+router.post('/login', login);
 
 /**
  * @swagger
@@ -112,54 +162,9 @@ const router = Router();
  */
 router.post('/register', register);
 
-/**
- * @swagger
- * /api/auth/login:
- *   post:
- *     summary: Login user and update streak
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *           properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 description: The user's email address
- *               password:
- *                 type: string
- *                 format: password
- *               currentStreak: 
- *                 type: number 
- *                 default: 0 
- *               longestStreak: 
- *                 type: number
- *                 default: 0  
- *                 description: The user's password
- *     responses:
- *       200:
- *         description: Login successfully. Streak potentially updated.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 token:
- *                   type: string
- *                   description: JWT authentication token
- *       400:
- *         description: Invalid credentials
- */
-router.post('/login', login);
+// auth.routes.ts
+router.get('/auth/nonce', generateNonce);
+
+router.post('/auth/wallet', connectWallet);
 
 export default router;

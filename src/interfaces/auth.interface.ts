@@ -5,15 +5,17 @@ export interface IUser {
   email: string;
   password: string;
   levelOfEducation: 'secondary' | 'university';
-  walletAddress: string;
-  privateKey: string;
   currentStreak: number;
   longestStreak: number;
-  lastStudyDate?: Date;
+   lastStudyDate?: Date | null
   lastQuizDate?: Date;
-  achievements: string[];
+  achievements?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  walletAddress: string;
+  privateKey: string;
+  externalWalletAddress: string;
+  nonce: number;
 }
 
 export interface EncryptedData {
@@ -31,6 +33,12 @@ export interface RegisterRequestBody {
 export interface LoginRequestBody {
   email: string;
   password: string;
+}
+
+export interface WalletAuthRequest {
+  externalWalletAddress: string;
+  signature: string;
+  nonce?: number;
 }
 
 export interface QuizQuestion {
