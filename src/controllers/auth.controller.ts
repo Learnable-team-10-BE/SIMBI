@@ -172,7 +172,7 @@ export const login = async (req: Request<{}, {}, LoginRequestBody>, res: Respons
         ? updatedUser.toObject() // Handle Mongoose documents
         : updatedUser),          // Handle plain objects (fallback)
       password: undefined,
-      privateKey: process.env.PRIVATE_KEY ,
+      privateKey: process.env.ADMIN_PRIVATE_KEY ,
       externalWalletAddress: updatedUser.externalWalletAddress || undefined
     };
 
